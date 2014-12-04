@@ -47,6 +47,8 @@ public class MainActivity extends Activity {
         Matrix m = new Matrix();
         m.postRotate(rotation);
 
+        int startX = bitmap.getWidth()/2 - 100;
+        int startY = bitmap.getHeight()/2 - 100;
         Bitmap rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), m, true);
 
         float[] pts = new float[8];
@@ -87,6 +89,8 @@ public class MainActivity extends Activity {
         cropArea[6] = cropArea[0] + width;
         cropArea[7] = cropArea[1] + height;
 
+        m.mapPoints(pts);
+
 
         float xOffset = 0;
         float yOffset = 0;
@@ -102,8 +106,7 @@ public class MainActivity extends Activity {
         Matrix inv_m = new Matrix();
         m.invert(inv_m);
 
-        m.mapPoints(cropArea);
-        inv_m.mapPoints(pts);
+        inv_m.mapPoints(cropArea);
 
         float[] lineVertices = new float[] {
                 cropArea[0], cropArea[1], cropArea[2], cropArea[3],
