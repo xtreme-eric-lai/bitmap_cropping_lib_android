@@ -75,6 +75,7 @@ public class MainActivity extends Activity {
         PointF bottomLeft = new PointF(cropArea[4], cropArea[5]);
         PointF bottomRight = new PointF(cropArea[6], cropArea[7]);
 
+        int angle = (int) getAngle(topLeft, topRight);
         setCropFrame(topLeft, topRight, bottomRight, bottomLeft);
     }
 
@@ -85,7 +86,6 @@ public class MainActivity extends Activity {
         options.inMutable = true;
         Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.random, options); //((BitmapDrawable) originalImageView.getDrawable()).getBitmap();
 
-        int rotation = (int) getAngle(topLeft, topRight);
         float[] cropArea = new float[8];
         cropArea[0] = topLeft.x;
         cropArea[1] = topLeft.y;
@@ -112,35 +112,51 @@ public class MainActivity extends Activity {
         paint.setStrokeWidth(5);
         canvas.drawLines(lineVertices, paint);
         originalImageView.setImageBitmap(bitmap);
-
-        for(int i = 0; i < cropArea.length; i++) {
-            Log.d("MainActiity", "cropArea mapPoints : " + cropArea[i]);
-        }
-        Log.d("MainActivity", "cropArea calc angle : " + getAngle( new PointF(cropArea[0], cropArea[1]), new PointF(cropArea[2], cropArea[3]) ) );
-
-    }
-
-    private float getOriginY() {
-        EditText yCoordEditText = (EditText) findViewById(R.id.yCoord);
-        return Float.parseFloat(yCoordEditText.getText().toString());
-    }
-
-    private float getOriginX() {
-        EditText xCoordEditText = (EditText) findViewById(R.id.xCoord);
-        return Float.parseFloat(xCoordEditText.getText().toString());
     }
 
     private void cropImage() {
-        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.random);
+        float initX = getOriginX();
+        float initY = getOriginY();
 
-        // Crop area start corner
+        int rotation = getRotation();
         int width = 600;
         int height = 400;
 
+        float[] cropArea = new float[8];
+        cropArea[0] = initX;
+        cropArea[1] = initY;
+
+        cropArea[2] = cropArea[0]+ width ;
+        cropArea[3] = cropArea[1];
+
+        cropArea[4] = cropArea[0];
+        cropArea[5] = cropArea[1] + height;
+
+        cropArea[6] = cropArea[0] + width;
+        cropArea[7] = cropArea[1] + height;
+
+        Matrix m = new Matrix();
+        m.postRotate(rotation);
+        m.mapPoints(cropArea);
+
+        PointF topLeft = new PointF(cropArea[0], cropArea[1]);
+        PointF topRight = new PointF(cropArea[2], cropArea[3]);
+        PointF bottomRight = new PointF(cropArea[6], cropArea[7]);
+        PointF bottomLeft = new PointF(cropArea[4], cropArea[5]);
+        cropImage(topLeft, topRight, bottomRight, bottomLeft);
+    }
+
+    private void cropImage(PointF topLeft, PointF topRight, PointF bottomRight, PointF bottomLeft) {
         int rotation = getRotation();
 
-        float initX = getOriginX();
-        float initY = getOriginY();
+        int angle = (int) getAngle(topLeft, topRight);
+        int width = 600;
+        int height = 400;
+        cropImage(topLeft, angle, width, height);
+    }
+
+    private void cropImage(PointF topLeft, int rotation, int width, int height) {
+        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.random);
 
         Matrix m = new Matrix();
         m.postRotate(rotation);
@@ -150,7 +166,7 @@ public class MainActivity extends Activity {
 
         Bitmap rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), inv_m, true);
 
-        float[] pts = new float[8];
+        float[] pts = new float[10];
 
         // Bitmap 4 corners
         pts[0] = 0;
@@ -165,6 +181,8 @@ public class MainActivity extends Activity {
         pts[6] = bitmap.getWidth();
         pts[7] = bitmap.getHeight();
 
+        pts[8] = topLeft.x;
+        pts[9] = topLeft.y;
         inv_m.mapPoints(pts);
 
         float xOffset = 0;
@@ -178,18 +196,12 @@ public class MainActivity extends Activity {
             }
         }
 
-        Bitmap croppedBitmap = Bitmap.createBitmap(rotatedBitmap, (int) (initX + xOffset),(int) (initY + yOffset), 600, 400);
+        Bitmap croppedBitmap = Bitmap.createBitmap(rotatedBitmap, (int) (pts[8] + xOffset),(int) (pts[9] + yOffset), width, height);
 
         setCropFrame();
 
-        Log.d("MainActivity", "bitmap w: " + bitmap.getWidth() + " h : " + bitmap.getHeight() + "; rotated w: " + rotatedBitmap.getWidth() + " h: " + rotatedBitmap.getHeight());
-        for(int i = 0; i < pts.length; i++) {
-            Log.d("MainActiity", "mapPoints : " + pts[i]);
-        }
-
         ImageView croppedImageView = (ImageView) findViewById(R.id.croppedImageView);
         croppedImageView.setImageBitmap(croppedBitmap);
-
 
     }
 
@@ -213,5 +225,15 @@ public class MainActivity extends Activity {
             inRads = 2*Math.PI - inRads;
 
         return Math.toDegrees(inRads);
+    }
+
+    private float getOriginY() {
+        EditText yCoordEditText = (EditText) findViewById(R.id.yCoord);
+        return Float.parseFloat(yCoordEditText.getText().toString());
+    }
+
+    private float getOriginX() {
+        EditText xCoordEditText = (EditText) findViewById(R.id.xCoord);
+        return Float.parseFloat(xCoordEditText.getText().toString());
     }
 }
