@@ -7,6 +7,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.PointF;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.util.Log;
@@ -43,17 +44,12 @@ public class MainActivity extends Activity {
     }
 
     private void setCropFrame() {
-        ImageView originalImageView = (ImageView) findViewById(R.id.originalImageView);
-
-        final BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inMutable = true;
-        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.random, options); //((BitmapDrawable) originalImageView.getDrawable()).getBitmap();
-
         // Crop area start corner
         int width = 600;
         int height = 400;
 
         int rotation = getRotation();
+
         float initX = getOriginX();
         float initY = getOriginY();
 
@@ -72,8 +68,36 @@ public class MainActivity extends Activity {
 
         Matrix m = new Matrix();
         m.postRotate(rotation);
-
         m.mapPoints(cropArea);
+
+        PointF topLeft = new PointF(cropArea[0], cropArea[1]);
+        PointF topRight = new PointF(cropArea[2], cropArea[3]);
+        PointF bottomLeft = new PointF(cropArea[4], cropArea[5]);
+        PointF bottomRight = new PointF(cropArea[6], cropArea[7]);
+
+        setCropFrame(topLeft, topRight, bottomRight, bottomLeft);
+    }
+
+    private void setCropFrame(PointF topLeft, PointF topRight, PointF bottomRight, PointF bottomLeft) {
+        ImageView originalImageView = (ImageView) findViewById(R.id.originalImageView);
+
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inMutable = true;
+        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.random, options); //((BitmapDrawable) originalImageView.getDrawable()).getBitmap();
+
+        int rotation = (int) getAngle(topLeft, topRight);
+        float[] cropArea = new float[8];
+        cropArea[0] = topLeft.x;
+        cropArea[1] = topLeft.y;
+
+        cropArea[2] = topRight.x;
+        cropArea[3] = topRight.y;
+
+        cropArea[4] = bottomLeft.x;
+        cropArea[5] = bottomLeft.y;
+
+        cropArea[6] = bottomRight.x;
+        cropArea[7] = bottomRight.y;
 
         float[] lineVertices = new float[] {
                 cropArea[0], cropArea[1], cropArea[2], cropArea[3],
@@ -92,6 +116,7 @@ public class MainActivity extends Activity {
         for(int i = 0; i < cropArea.length; i++) {
             Log.d("MainActiity", "cropArea mapPoints : " + cropArea[i]);
         }
+        Log.d("MainActivity", "cropArea calc angle : " + getAngle( new PointF(cropArea[0], cropArea[1]), new PointF(cropArea[2], cropArea[3]) ) );
 
     }
 
@@ -107,7 +132,13 @@ public class MainActivity extends Activity {
 
     private void cropImage() {
         Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.random);
+
+        // Crop area start corner
+        int width = 600;
+        int height = 400;
+
         int rotation = getRotation();
+
         float initX = getOriginX();
         float initY = getOriginY();
 
@@ -167,4 +198,20 @@ public class MainActivity extends Activity {
         return Integer.parseInt(rotationField.getText().toString());
     }
 
+    private double getAngle(PointF axisPoint, PointF screenPoint)
+    {
+        double dx = screenPoint.x - axisPoint.x;
+        // Minus to correct for coord re-mapping
+        double dy = -(screenPoint.y - axisPoint.y);
+
+        double inRads = Math.atan2(dy,dx);
+
+        // We need to map to coord system when 0 degree is at 3 O'clock, 270 at 12 O'clock
+        if (inRads < 0)
+            inRads = Math.abs(inRads);
+        else
+            inRads = 2*Math.PI - inRads;
+
+        return Math.toDegrees(inRads);
+    }
 }
