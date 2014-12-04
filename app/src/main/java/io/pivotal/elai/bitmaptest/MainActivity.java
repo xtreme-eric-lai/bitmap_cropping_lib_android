@@ -150,8 +150,8 @@ public class MainActivity extends Activity {
         int rotation = getRotation();
 
         int angle = (int) getAngle(topLeft, topRight);
-        int width = 600;
-        int height = 400;
+        int width = (int) getDistance(topLeft, topRight);
+        int height = (int) getDistance(topLeft, bottomLeft);
         cropImage(topLeft, angle, width, height);
     }
 
@@ -198,7 +198,7 @@ public class MainActivity extends Activity {
 
         Bitmap croppedBitmap = Bitmap.createBitmap(rotatedBitmap, (int) (pts[8] + xOffset),(int) (pts[9] + yOffset), width, height);
 
-        setCropFrame();
+//        setCropFrame();
 
         ImageView croppedImageView = (ImageView) findViewById(R.id.croppedImageView);
         croppedImageView.setImageBitmap(croppedBitmap);
@@ -225,6 +225,10 @@ public class MainActivity extends Activity {
             inRads = 2*Math.PI - inRads;
 
         return Math.toDegrees(inRads);
+    }
+
+    private double getDistance(PointF start, PointF end) {
+        return Math.sqrt(Math.pow(start.x - end.x, 2) + Math.pow(start.y - end.y, 2));
     }
 
     private float getOriginY() {
