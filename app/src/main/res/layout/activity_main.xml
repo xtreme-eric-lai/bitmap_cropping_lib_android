@@ -49,13 +49,23 @@
         android:minEms="4"
         />
     </LinearLayout>
-    <Button
-        android:id="@+id/croppedButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Crop"
-        android:layout_gravity="center"/>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/setButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Set"/>
+        <Button
+            android:id="@+id/croppedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Crop"
+            android:layout_gravity="center"/>
+    </LinearLayout>
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
